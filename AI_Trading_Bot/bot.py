@@ -92,7 +92,7 @@ class TradingBotGUI:
         levels = self.levels_entry.get()
         drawdown = self.drawdown_entry.get()
 
-        if not symbol or not levels.isdigit() or not drawdown.replace(',', '', 1).isdigit():
+        if not symbol or not levels.isdigit() or not drawdown.replace('.', '', 1).isdigit():
             messagebox.showerror("Error", "Invalid Input")
             return
 
@@ -100,7 +100,8 @@ class TradingBotGUI:
         drawdown = float(drawdown) / 100
         entry_price = fetch_mock_api(symbol)['price']
 
-        level_prices = {i+1 : round(entry_price * (1-drawdown)*(i+1), 2) for i in range(levels)}
+        level_prices = {i+1 : round(entry_price * (1 - drawdown*(i+1)), 2) for i in range(levels)}
+
 
         self.equities[symbol] = {
             "position":0,
@@ -171,6 +172,7 @@ class TradingBotGUI:
     def get_max_entry_price(self, symbol):
         try:
             orders = api.list_orders(status="filled", limit=50)
+            print(orders)
             prices = [float(order.filled_avg_price) for order in orders if order.filled_avg_price and order.symbol == symbol]
             return max(prices) if prices else -1
         except Exception as e:
@@ -230,8 +232,8 @@ class TradingBotGUI:
                 limit_price=price
             )
             self.equities[symbol]['levels'][-level] = price
-            del self.equities[symbol]['levels']['level']
-            print(f"Places order for {symbol}@{price}")
+            del self.equities[symbol]['levels'][level]
+            print(f"Placed order for {symbol}@{price}")
         except Exception as e:
             messagebox.showerror("Order Error", f"Error placing order {e}")
 
